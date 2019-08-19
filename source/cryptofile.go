@@ -9,18 +9,35 @@ import (
 
 func main() {
 	loadLog()
-	src, dst, secret, action, err := parseArgs()
+	src, dst, secret, action, big, err := parseArgs()
 	switch action {
 	case "encode":
-		if err = ext.EncryptFile(src, dst, []byte(secret)); err != nil {
-			log.Errorf("EncryptFile Err:%v", err.Error())
-			return
+		switch big {
+		case true:
+			if err = ext.EncryptBigFile(src, dst, []byte(secret)); err != nil {
+				log.Errorf("EncryptBigFile Err:%v", err.Error())
+				return
+			}
+		default:
+			if err = ext.EncryptFile(src, dst, []byte(secret)); err != nil {
+				log.Errorf("EncryptFile Err:%v", err.Error())
+				return
+			}
 		}
+
 		log.Infof("EncryptFile src(\"%v\") => dst(\"%v\")", src, dst)
 	case "decode":
-		if err = ext.DecryptFile(src, dst, []byte(secret)); err != nil {
-			log.Errorf("EncryptFile Err:%v", err.Error())
-			return
+		switch big {
+		case true:
+			if err = ext.DecryptBigFile(src, dst, []byte(secret)); err != nil {
+				log.Errorf("EncryptBigFile Err:%v", err.Error())
+				return
+			}
+		default:
+			if err = ext.DecryptFile(src, dst, []byte(secret)); err != nil {
+				log.Errorf("EncryptFile Err:%v", err.Error())
+				return
+			}
 		}
 		log.Infof("DecryptFile src(\"%v\") => dst(\"%v\")", src, dst)
 	}
@@ -37,7 +54,8 @@ func loadLog() {
 	log.SetLevel(log.DebugLevel)
 }
 
-func parseArgs() (src, dst, secret, action string, err error) {
+func parseArgs() (src, dst, secret, action string, big bool, err error) {
+	big = false
 	for _, arg := range os.Args {
 		op := strings.Split(arg, "=")
 		sc := op[0]
@@ -48,6 +66,8 @@ func parseArgs() (src, dst, secret, action string, err error) {
 				action = "encode"
 			case "--decode":
 				action = "decode"
+			case "--big":
+				big = true
 			}
 		case 2:
 			switch sc {
