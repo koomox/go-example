@@ -18,7 +18,11 @@ wget -O cryptofile.go https://raw.githubusercontent.com/koomox/go-example/master
 go mod init .
 go build -o cryptofile cryptofile.go
 ```
-
+```sh
+wget https://raw.githubusercontent.com/koomox/go-example/master/storage/cryptofile.tar.gz
+tar -zxf cryptofile.tar.gz -C /usr/bin
+chmod +x /usr/bin/cryptofile
+```
 ### Proxy pool        
 [source](source/proxypool.go)          
 ```sh
