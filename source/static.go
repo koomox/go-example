@@ -96,25 +96,33 @@ func (this *Item)Compress() (buffer []byte, err error){
 		b.Write([]byte("\",\n\t\tContentType: \""))
 		switch path.Ext(f) {
 		case ".js":
-			b.WriteString("text/javascript; charset=utf-8")
+			b.WriteString("application/javascript; charset=utf-8")
 		case ".css":
 			b.WriteString("text/css; charset=utf-8")
 		case ".html", ".htm", ".php":
 			b.WriteString("text/html; charset=utf-8")
 		case ".jpg", "jpeg":
-			b.WriteString("image/jpeg; charset=utf-8")
+			b.WriteString("image/jpeg")
 		case ".gif":
-			b.WriteString("image/gif; charset=utf-8")
+			b.WriteString("image/gif")
 		case ".png":
-			b.WriteString("image/png; charset=utf-8")
+			b.WriteString("image/png")
+		case ".svg":
+			b.WriteString("image/svg+xml")
+		case ".webp":
+			b.WriteString("image/webp")
+		case ".xml":
+			b.WriteString("text/xml; charset=utf-8")
+		case ".pdf":
+			b.WriteString("application/pdf")
 		case ".otf":
-			b.WriteString("font/otf; charset=utf-8")
+			b.WriteString("font/otf")
 		case ".ttf":
-			b.WriteString("font/ttf; charset=utf-8")
+			b.WriteString("font/ttf")
 		case ".woff":
-			b.WriteString("font/woff; charset=utf-8")
+			b.WriteString("font/woff")
 		case ".woff2":
-			b.WriteString("font/woff2; charset=utf-8")
+			b.WriteString("font/woff2")
 		default:
 			b.WriteString("text/plain; charset=utf-8")
 		}
