@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"compress/zlib"
 	"encoding/base64"
 	"fmt"
 	"github.com/koomox/ext"
@@ -17,23 +16,7 @@ type File struct {
 	Content []byte
 }
 
-func Compress(data []byte) (buf []byte, err error){
-	var b bytes.Buffer
-	w := zlib.NewWriter(&b)
-
-	if _, err = w.Write(data);err != nil {
-		return
-	}
-
-	if err = w.Close(); err != nil {
-		return
-	}
-
-	buf = b.Bytes()
-	return
-}
-
-func TarCompressAllFile(root, prefix string) (buffer []byte, err error) {
+func TarCompressAllFile(root, prefix, filter string) (buffer []byte, err error) {
 	var (
 		fs []string
 		b bytes.Buffer
@@ -52,13 +35,16 @@ func TarCompressAllFile(root, prefix string) (buffer []byte, err error) {
 
 	b.Write([]byte("var files = []File{\n"))
 	for _, f := range fs {
+		if strings.EqualFold(f, filter) {
+			continue
+		}
 		b.Write([]byte("\tFile{\n\t\tName: \""))
 		b.WriteString(path.Join("/", prefix, strings.TrimPrefix(f, root)))
 		b.Write([]byte("\",\n\t\tContent: []byte(\""))
 		if buf, err = ioutil.ReadFile(f);err != nil {
 			return
 		}
-		if buf, err = Compress(buf); err != nil {
+		if buf, err = ext.NewEncoding().Compress(buf); err != nil {
 			return
 		}
 		b.WriteString(base64.RawStdEncoding.EncodeToString(buf))
@@ -102,7 +88,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	buf, err := TarCompressAllFile(root, prefix)
+	buf, err := TarCompressAllFile(root, prefix, output)
 	if err != nil {
 		fmt.Println(err)
 		return
