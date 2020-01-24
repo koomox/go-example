@@ -33,7 +33,7 @@ func Compress(data []byte) (buf []byte, err error){
 	return
 }
 
-func TarCompressAllFile(root string) (buffer []byte, err error) {
+func TarCompressAllFile(root, prefix string) (buffer []byte, err error) {
 	var (
 		fs []string
 		b bytes.Buffer
@@ -53,7 +53,7 @@ func TarCompressAllFile(root string) (buffer []byte, err error) {
 	b.Write([]byte("var files = []File{\n"))
 	for _, f := range fs {
 		b.Write([]byte("\tFile{\n\t\tName: \""))
-		b.WriteString(strings.TrimPrefix(f, root))
+		b.WriteString(path.Join("/", prefix, strings.TrimPrefix(f, root)))
 		b.Write([]byte("\",\n\t\tContent: []byte(\""))
 		if buf, err = ioutil.ReadFile(f);err != nil {
 			return
@@ -69,7 +69,7 @@ func TarCompressAllFile(root string) (buffer []byte, err error) {
 	return
 }
 
-func parseArgs() (root, output string, err error) {
+func parseArgs() (root, prefix, output string, err error) {
 	for _, arg := range os.Args {
 		op := strings.Split(arg, "=")
 		sc := op[0]
@@ -78,6 +78,8 @@ func parseArgs() (root, output string, err error) {
 			switch sc {
 			case "--root":
 				root = strings.Replace(op[1], "\\", "/", -1)
+			case "--prefix":
+				prefix = strings.Replace(op[1], "\\", "/", -1)
 			case "--output", "--out":
 				output = op[1]
 			}
@@ -95,12 +97,12 @@ func parseArgs() (root, output string, err error) {
 }
 
 func main() {
-	root, output, err := parseArgs()
+	root, prefix, output, err := parseArgs()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	buf, err := TarCompressAllFile(root)
+	buf, err := TarCompressAllFile(root, prefix)
 	if err != nil {
 		fmt.Println(err)
 		return
