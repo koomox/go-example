@@ -11,6 +11,13 @@ export GOPROXY=https://goproxy.io
 SET GO111MODULE=on
 SET GOPROXY=https://goproxy.io
 ```
+### Static File         
+[source](source/static.go)              
+```sh
+wget -O cryptofile.go https://raw.githubusercontent.com/koomox/go-example/master/source/static.go
+go mod init .
+go build -o cryptofile static.go
+```
 ### Crypto File        
 [source](source/cryptofile.go)           
 ```sh
