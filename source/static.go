@@ -13,6 +13,7 @@ import (
 
 type File struct {
 	Name string
+	ContentType string
 	Content []byte
 }
 
@@ -29,6 +30,14 @@ type Encoding struct {
 
 func NewEncoding() *Encoding {
 	return &Encoding{}
+}
+
+func DeCompress(data []byte) (buf []byte, err error) {
+	if data, err = base64.RawStdEncoding.DecodeString(string(data)); err != nil {
+		return
+	}
+
+	return ext.NewEncoding().DeCompress(data)
 }
 
 func (this *Encoding)CompressAllFile() (buffer []byte, err error) {
@@ -84,6 +93,31 @@ func (this *Item)Compress() (buffer []byte, err error){
 		}
 		b.Write([]byte("\tFile{\n\t\tName: \""))
 		b.WriteString(path.Join(this.prefix, strings.TrimPrefix(f, this.root)))
+		b.Write([]byte("\",\n\t\tContentType: \""))
+		switch path.Ext(f) {
+		case ".js":
+			b.WriteString("text/javascript; charset=utf-8")
+		case ".css":
+			b.WriteString("text/css; charset=utf-8")
+		case ".html", ".htm", ".php":
+			b.WriteString("text/html; charset=utf-8")
+		case ".jpg", "jpeg":
+			b.WriteString("image/jpeg; charset=utf-8")
+		case ".gif":
+			b.WriteString("image/gif; charset=utf-8")
+		case ".png":
+			b.WriteString("image/png; charset=utf-8")
+		case ".otf":
+			b.WriteString("font/otf; charset=utf-8")
+		case ".ttf":
+			b.WriteString("font/ttf; charset=utf-8")
+		case ".woff":
+			b.WriteString("font/woff; charset=utf-8")
+		case ".woff2":
+			b.WriteString("font/woff2; charset=utf-8")
+		default:
+			b.WriteString("text/plain; charset=utf-8")
+		}
 		b.Write([]byte("\",\n\t\tContent: []byte(\""))
 		if buf, err = ioutil.ReadFile(f);err != nil {
 			return
