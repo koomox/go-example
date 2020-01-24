@@ -14,9 +14,9 @@ SET GOPROXY=https://goproxy.io
 ### Static File         
 [source](source/static.go)              
 ```sh
-wget -O cryptofile.go https://raw.githubusercontent.com/koomox/go-example/master/source/static.go
+wget -O static.go https://raw.githubusercontent.com/koomox/go-example/master/source/static.go
 go mod init .
-go build -o cryptofile static.go
+go build -o static static.go
 ```
 ### Crypto File        
 [source](source/cryptofile.go)           
