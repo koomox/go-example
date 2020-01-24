@@ -16,30 +16,74 @@ type File struct {
 	Content []byte
 }
 
-func TarCompressAllFile(root, prefix, filter string) (buffer []byte, err error) {
+type Item struct {
+	root string
+	filter []string
+	prefix string
+}
+
+type Encoding struct {
+	buffer bytes.Buffer
+	item []*Item
+}
+
+func NewEncoding() *Encoding {
+	return &Encoding{}
+}
+
+func (this *Encoding)CompressAllFile() (buffer []byte, err error) {
+	var (
+		b bytes.Buffer
+		buf []byte
+	)
+
+	b.Write([]byte("var files = []File{\n"))
+	for _, item := range this.item {
+		if buf, err = item.Compress(); err != nil {
+			return
+		}
+		b.Write(buf)
+	}
+	b.Write([]byte("}"))
+	buffer = b.Bytes()
+	return
+}
+
+func (this *Encoding)New() (*Item) {
+	item := &Item{}
+	this.item = append(this.item, item)
+	return item
+}
+
+func (this *Item)Compress() (buffer []byte, err error){
 	var (
 		fs []string
 		b bytes.Buffer
 		buf []byte
 	)
-	if root == "" {
-		if root, err = ext.GetCurrentDirectory(); err != nil {
+	if this.root == "" {
+		if this.root, err = ext.GetCurrentDirectory(); err != nil {
 			return
 		}
 	}
-
-	root = path.Join(root, "")
-	if fs, err = ext.GetCustomDirectoryAllFile(root); err != nil {
+	this.root = path.Join(this.root, "")
+	if fs, err = ext.GetCustomDirectoryAllFile(this.root); err != nil {
 		return
 	}
 
-	b.Write([]byte("var files = []File{\n"))
 	for _, f := range fs {
-		if strings.EqualFold(f, filter) {
+		filter := false
+		for _, v := range this.filter {
+			if strings.EqualFold(f, v) || strings.HasPrefix(f, v) {
+				filter = true
+				break
+			}
+		}
+		if filter {
 			continue
 		}
 		b.Write([]byte("\tFile{\n\t\tName: \""))
-		b.WriteString(path.Join("/", prefix, strings.TrimPrefix(f, root)))
+		b.WriteString(path.Join(this.prefix, strings.TrimPrefix(f, this.root)))
 		b.Write([]byte("\",\n\t\tContent: []byte(\""))
 		if buf, err = ioutil.ReadFile(f);err != nil {
 			return
@@ -50,12 +94,34 @@ func TarCompressAllFile(root, prefix, filter string) (buffer []byte, err error) 
 		b.WriteString(base64.RawStdEncoding.EncodeToString(buf))
 		b.Write([]byte("\"),\n\t},\n"))
 	}
-	b.Write([]byte("}"))
 	buffer = b.Bytes()
 	return
 }
 
-func parseArgs() (root, prefix, output string, err error) {
+func (this *Item)Filter(elem ...string) (*Item){
+	for i, e := range elem {
+		if e != "" {
+			this.filter = append(this.filter, elem[i])
+		}
+	}
+
+	return this
+}
+
+func (this *Item)Root(root string) (*Item){
+	root = strings.Replace(root, "\\", "/", -1)
+	this.root = root
+
+	return this
+}
+
+func (this *Item)Prefix(prefix string) (*Item){
+	prefix = strings.Replace(prefix, "\\", "/", -1)
+	this.prefix = path.Join("/", prefix)
+	return this
+}
+
+func parseArgs() (root, prefix, filter, output string, err error) {
 	for _, arg := range os.Args {
 		op := strings.Split(arg, "=")
 		sc := op[0]
@@ -66,6 +132,8 @@ func parseArgs() (root, prefix, output string, err error) {
 				root = strings.Replace(op[1], "\\", "/", -1)
 			case "--prefix":
 				prefix = strings.Replace(op[1], "\\", "/", -1)
+			case "--filter":
+				filter = strings.Replace(op[1], "\\", "/", -1)
 			case "--output", "--out":
 				output = op[1]
 			}
@@ -83,12 +151,14 @@ func parseArgs() (root, prefix, output string, err error) {
 }
 
 func main() {
-	root, prefix, output, err := parseArgs()
+	root, prefix, filter, output, err := parseArgs()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	buf, err := TarCompressAllFile(root, prefix, output)
+	enc := NewEncoding()
+	enc.New().Root(root).Prefix(prefix).Filter(filter)
+	buf, err := enc.CompressAllFile()
 	if err != nil {
 		fmt.Println(err)
 		return
