@@ -17,7 +17,7 @@ const (
 	randomSpecial  = "~!@#$%^&*_+:?`-=;,."
 )
 
-func generatorRandomStr(length int, complete, noNumber, noSpecial bool) (string, error) {
+func RandomString(length int, complete, noNumber, noSpecial bool) (string, error) {
 	var randomPool = randomLetter
 
 	if complete {
@@ -50,16 +50,6 @@ func generatorRandomStr(length int, complete, noNumber, noSpecial bool) (string,
 	return string(randstr), nil
 }
 
-func RandomString(length int) (result string, err error) {
-	for i := 0; i < 3; i++ {
-		if result, err = generatorRandomStr(length, false, false, true); err != nil {
-			continue
-		}
-		return
-	}
-	return
-}
-
 func main() {
 	var (
 		length int
@@ -71,9 +61,9 @@ func main() {
 	length, number, symbol = parseArg()
 	for i:=0; i < number; i++ {
 		if symbol {
-			result, err = generatorRandomStr(length, false, false, false)
+			result, err = RandomString(length, false, false, false)
 		} else {
-			result, err = generatorRandomStr(length, false, false, true)
+			result, err = RandomString(length, false, false, true)
 		}
 
 		if err != nil {
